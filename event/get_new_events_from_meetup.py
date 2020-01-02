@@ -20,6 +20,12 @@ thumb_nail(특정 이벤트의 사진이 없으면 그룹의 사진을 보내주
 """
 import requests
 from datetime import datetime, timedelta
+from django.core.files.base import ContentFile
+import django
+
+django.setup()
+
+from event.models import MeetupCrawling, Category
 
 korea_meetup_dev_group = {
     'GDG-Seoul', 'awskrug', 'HashedLounge', 'seoul-tech-society',
@@ -32,13 +38,19 @@ korea_meetup_dev_group = {
     'Cosmos-Seoul', 'Korea-Blockchain-Hub', 'KOREASLUG', 'Software-QA'
 }
 
+MIMETYPE = {
+    "image/bmp": '.bmp',
+    'image/jpeg': '.jpg',
+    'image/png': '.png',
+}
 
-def check_for_new_events_from_meetup_dev_group(korea_meetup_dev_group):
+
+def save_new_events_from_meetup_dev_group(korea_meetup_dev_group):
     """
     featured_photo -> 이벤트 사진
     group_key_photo -> 그룹 사진
     """
-    results = dict()
+    event_dict = dict()
     for group in korea_meetup_dev_group:
         url = 'https://api.meetup.com/%s/events?&sign=true&photo-host=public&page=50&fields=group_key_photo,featured_photo' % (
             group)
@@ -46,6 +58,7 @@ def check_for_new_events_from_meetup_dev_group(korea_meetup_dev_group):
         response_json = response.json()
         for event in range(len(response_json)):
             print('title: ' + response_json[event]['name'])
+
             print('host: ' + response_json[event]['group']['name'])
 
             start_at, end_at = get_start_and_end_time(response_json[event])
@@ -60,8 +73,23 @@ def check_for_new_events_from_meetup_dev_group(korea_meetup_dev_group):
 
             print('meetup_event_id: ' + response_json[event]['id'])
 
-            photo = get_photo(response_json[event].get('group'), response_json[event].get('featured_photo'))
-            print('photo: ' + photo)
+            photo_url = get_photo_url(response_json[event].get('group'), response_json[event].get('featured_photo'))
+            print('photo: ' + photo_url)
+
+            event_dict['title'] = response_json[event]['name']
+            event_dict['host'] = response_json[event]['group']['name']
+            event_dict['start_at'] = start_at
+            event_dict['end_at'] = end_at
+            event_dict['external_link'] = response_json[event]['link']
+            event_dict['source'] = 'meetup_crawling'
+            event_dict['location'] = venue
+
+            category_ = Category.objects.get(name='conference')
+
+            photo = requests.get(photo_url)
+            meetup_event = MeetupCrawling.objects.create(**event_dict, category=category_)
+            image_extension = MIMETYPE[photo.headers['Content-Type']]
+            meetup_event.photo.save('test' + image_extension, ContentFile(photo.content), save=True)
 
 
 def get_start_and_end_time(response_json):
@@ -89,10 +117,10 @@ def get_venue(venue_json):
             location += ' ' + venue_json.get('name')
         return location
 
-def get_photo(group_photo, featured_photo):
+def get_photo_url(group_photo, featured_photo):
     if featured_photo is None:
         return group_photo.get('key_photo').get('photo_link')
     return featured_photo.get('photo_link')
 
 if __name__ == '__main__':
-    check_for_new_events_from_meetup_dev_group(korea_meetup_dev_group)
+    save_new_events_from_meetup_dev_group(korea_meetup_dev_group)

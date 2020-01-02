@@ -54,9 +54,7 @@ class FestaCrawling(models.Model):
 class MeetupCrawling(models.Model):
     title = models.CharField(max_length=100)
     host = models.CharField(max_length=100, blank=True, default='')
-    content = models.TextField(blank=True)
-    photo = models.ImageField(blank=True, null=True,
-                              upload_to=uuid_name_upload_to)
+    photo = models.ImageField(blank=True, null=True)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
 
     start_at = models.DateTimeField(blank=True, null=True)
