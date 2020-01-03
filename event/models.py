@@ -11,19 +11,19 @@ class Category(models.Model):
 
 
 MANUAL = 'manual'
-USERREQUEST = 'user_request'
-FESTA = 'festa_crawling'
-MEETUP = 'meetup_crawling'
-EVENTUS = 'eventus_crawling'
-FACEBOOK = 'facebook_crawling'
+USERREQUEST = 'user'
+FESTA = 'festa'
+MEETUP = 'meetup'
+EVENTUS = 'eventus'
+FACEBOOK = 'facebook'
 
 DATA_SOURCE = [
-    ('manual', 'manual'),
-    ('user', 'user_request'),
-    ('festa', 'festa_crawling'),
-    ('meetup', 'meetup_crawling'),
-    ('eventus', 'eventus_crawling'),
-    ('facebook', 'facebook_crawling'),
+    ('manual', '직접 입력'),
+    ('user', '사용자 요청'),
+    ('festa', 'FESTA 크롤링'),
+    ('meetup', 'MEETUP 크롤링'),
+    ('eventus', 'EVENTUS 크롤링'),
+    ('facebook', 'FACEBOOK 크롤링'),
 ]
 
 
