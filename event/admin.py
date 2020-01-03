@@ -4,6 +4,14 @@ from event.models import (Category, FestaCrawling, MeetupCrawling,
                           WaitingEvent, DevEvent, NotDevEvent)
 
 
+def from_MeetupCrawling_to_WaitingEvent(modeladmin, request, queryset):
+    for meetup_instance in queryset:
+        meetup_dict = meetup_instance.__dict__
+        meetup_dict.pop('_state')
+        meetup_dict.pop('id')
+        waiting_event = WaitingEvent(**meetup_dict)
+        waiting_event.save()
+
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
     search_fields = ['name']
@@ -16,7 +24,7 @@ class FestaCrawlingAdmin(admin.ModelAdmin):
 
 @admin.register(MeetupCrawling)
 class MeetupCrawlingAdmin(admin.ModelAdmin):
-    pass
+    actions = [from_MeetupCrawling_to_WaitingEvent]
 
 
 @admin.register(EventusCrawling)
