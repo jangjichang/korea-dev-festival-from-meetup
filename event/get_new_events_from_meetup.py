@@ -1,30 +1,12 @@
 """
-meetup에서 1000명 이상의 tech 그룹과
-2020년 1월 2일 기준 최근에 활동했던 그룹 목록을 저장한다.
-
-예정된 이벤트가 없는 경우, 1개인 경우, 2개 이상인 경우
-
-요청하고 -> 해당 id의 이벤트가 있는지 확인하고 -> 없으면 등록
-
-필요한 정보:
-# title
-# host
-thumb_nail(특정 이벤트의 사진이 없으면 그룹의 사진을 보내주는 걸로함)
-# category
-# start_at
-# end_at
-# link
-# location
-# source
-# meetup_event_id
+https://www.meetup.com/ko-KR/meetup_api/
 """
 import requests
 from datetime import datetime, timedelta
+
 from django.core.files.base import ContentFile
 import django
-
 django.setup()
-
 from event.models import MeetupCrawling, Category
 
 korea_meetup_dev_group = {
@@ -46,10 +28,6 @@ MIMETYPE = {
 
 
 def save_new_events_from_meetup_dev_group(korea_meetup_dev_group):
-    """
-    featured_photo -> 이벤트 사진
-    group_key_photo -> 그룹 사진
-    """
     event_dict = dict()
     for group in korea_meetup_dev_group:
         url = 'https://api.meetup.com/%s/events?&sign=true&photo-host=public&page=50&fields=group_key_photo,featured_photo' % (
@@ -89,7 +67,7 @@ def save_new_events_from_meetup_dev_group(korea_meetup_dev_group):
             photo = requests.get(photo_url)
             meetup_event = MeetupCrawling.objects.create(**event_dict, category=category_)
             image_extension = MIMETYPE[photo.headers['Content-Type']]
-            meetup_event.photo.save('test' + image_extension, ContentFile(photo.content), save=True)
+            meetup_event.photo.save('image' + image_extension, ContentFile(photo.content), save=True)
 
 
 def get_start_and_end_time(response_json):
