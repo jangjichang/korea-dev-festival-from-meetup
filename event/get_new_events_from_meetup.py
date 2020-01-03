@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 from django.core.files.base import ContentFile
 import django
 django.setup()
-from event.models import MeetupCrawling, Category
+from event.models import MeetupCrawling, WaitingEvent, Category
 
 korea_meetup_dev_group = {
     'GDG-Seoul', 'awskrug', 'HashedLounge', 'seoul-tech-society',
@@ -59,7 +59,7 @@ def save_new_events_from_meetup_dev_group(korea_meetup_dev_group):
             event_dict['start_at'] = start_at
             event_dict['end_at'] = end_at
             event_dict['external_link'] = response_json[event]['link']
-            event_dict['source'] = 'meetup_crawling'
+            event_dict['source'] = 'meetup'
             event_dict['location'] = venue
 
             category_ = Category.objects.get(name='conference')
@@ -100,5 +100,19 @@ def get_photo_url(group_photo, featured_photo):
         return group_photo.get('key_photo').get('photo_link')
     return featured_photo.get('photo_link')
 
+
+def copy_from_MeetupCrawling_table_to_WaitingEvent_table():
+    """
+
+    """
+    meetup_dict = MeetupCrawling.objects.last().__dict__
+    meetup_dict.pop('_state')
+    meetup_dict.pop('id')
+
+    waiting_event_instance = WaitingEvent(**meetup_dict)
+    waiting_event_instance.save()
+    
+
 if __name__ == '__main__':
-    save_new_events_from_meetup_dev_group(korea_meetup_dev_group)
+    # save_new_events_from_meetup_dev_group(korea_meetup_dev_group)
+    copy_from_MeetupCrawling_table_to_WaitingEvent_table()
